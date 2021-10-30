@@ -9,6 +9,8 @@ if __package__ is not None and len(__package__) > 0:
 else:
     import features as jf
 
+#TODO: FInd out how to get this to generate a problem
+
 MAX_SPEED = 6000
 MIN_RANGE = 10  # Assume that scale will be greater than 10 and less than 1000
 MAX_RANGE = 1000
@@ -24,7 +26,9 @@ for a_type in jf.AssetTypes:
 
 
 def correct_effector_data(problem):
-    if problem['Effectors'].shape[1] == 12:
+    p = problem['Effectors']
+    print(f"{p = }")
+    if p.shape[1] == 12:
         extension = np.zeros((len(problem['Effectors']), len(jf.EffectorFeatures) - problem['Effectors'].shape[1]))
         problem['Effectors'] = np.append(problem['Effectors'], extension, axis=1)
 
@@ -204,16 +208,17 @@ def returnDistance(effector, task):
         (effector[jf.EffectorFeatures.STARTX] - newX) ** 2 + (effector[jf.EffectorFeatures.STARTY] - newY) ** 2)
     return travelDistance + returnTrip
 
-
+# This is used to generate problems.
 class ProblemGenerator():
 
+    #Create a new set of effectors, targets and opportunities
     def __init__(self):
         self.arena = np.zeros(len(jf.ArenaFeatures))
         self.effectors = []
         self.targets = []
         self.opportunities = []
 
-    def newProblem(self, arena, targets, planes=0, frigates=0, artillery=0, armoured=0, infantry=0):
+    def newProblem(self, arena, numTargets, planes=0, frigates=0, artillery=0, armoured=0, infantry=0):
         self.arena = arena
         self.effectors = []
         for i in range(planes):
@@ -226,7 +231,7 @@ class ProblemGenerator():
             self.effectors.append(newArmoured(self.arena))
         for i in range(infantry):
             self.effectors.append(newInfantry(self.arena))
-        self.populateTargets(targets)
+        self.populateTargets(numTargets)
         self.populateOpportunities()
         return self.formatProblem()
 
@@ -296,8 +301,7 @@ def network_validation(nb_effectors=7, nb_targets=16):
     armoured = rands[1] - artillery
     infantry = total - (artillery + armoured)
     PG = ProblemGenerator()
-    return PG.newProblem(arena, targets=nb_targets, artillery=artillery, armoured=armoured, infantry=infantry)
-
+    return PG.newProblem(arena, numTargets=nb_targets, artillery=artillery, armoured=armoured, infantry=infantry)
 
 def allPlanes():
     arena = np.zeros(len(jf.ArenaFeatures))

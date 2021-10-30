@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+from PGTest import printProblem
 import simulator as sim
 import problem_generators as pg
 import features as jf
@@ -59,14 +60,14 @@ def get_action():
         compare_results(pythonState, state)
     if MULTIPLE:
         actions = get_actions_from_solver(copy.deepcopy(problem))
-        #print(f"selected actions: {actions}")
+        print(f"Selected actions: {actions}")
         assets = {'assets': []}
         for action in actions:
             assets['assets'].append([int(action[0]), int(action[1])])
         return jsonify(assets)
     else:
         action = get_action_from_solver(copy.deepcopy(problem))
-        #print(f"Selected action: {action}")
+        print(f"Selected action: {action = }")
         pythonState, _, _ = env.update_state(
             (action[0], action[1]), state.copy())
         return jsonify({'assets': [int(action[0]), int(action[1])]})
@@ -77,11 +78,27 @@ def get_app_command():
     global pythonState
     json_string = urllib.parse.unquote(request.data.decode("UTF-8"))
     command = json.loads(json_string)
-    print(f"Instruction: {command['instruction'] }")
-    data = command['data']
-    tmpResponse = [[1,2],[3,4]]
+    instruction = command['instruction']
+    print(f"Instruction: {instruction = }")
+    response = None
+    if(instruction == 'new'):
+
+        data = command['data']
+        print(f'{data = }')
+        problem = pg.network_validation(data['effectors'], data['targets'])
+        arena = problem['Arena'].tolist()
+        effectors = problem['Effectors'].tolist()
+        targets = problem['Targets'].tolist()
+        opps = problem['Opportunities'].tolist()
+
+        state = {'arena': arena, 'effectors': effectors, 'targets':targets,'opportunities':opps}
+        response = {'state': state, 'reward': None, 'time': 0}
     
-    return jsonify(tmpResponse)
+    elif(instruction == 'step'):
+        action = command['action']
+
+    js_response = jsonify(response)
+    return js_response
 
 
 app.run()
