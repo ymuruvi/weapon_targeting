@@ -13,8 +13,10 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 pythonState = False
 env = sim.Simulation(sim.mergeState)
+# Used to step through
 MULTIPLE = True
 
+COMMANDS = {"step":1,"restart":2}
 
 def get_action_from_solver(state):
     _, solution = js.greedy(state)  # AStar(state)
@@ -57,14 +59,14 @@ def get_action():
         compare_results(pythonState, state)
     if MULTIPLE:
         actions = get_actions_from_solver(copy.deepcopy(problem))
-        print(f"selected actions: {actions}")
+        #print(f"selected actions: {actions}")
         assets = {'assets': []}
         for action in actions:
             assets['assets'].append([int(action[0]), int(action[1])])
         return jsonify(assets)
     else:
         action = get_action_from_solver(copy.deepcopy(problem))
-        print(f"Selected action: {action}")
+        #print(f"Selected action: {action}")
         pythonState, _, _ = env.update_state(
             (action[0], action[1]), state.copy())
         return jsonify({'assets': [int(action[0]), int(action[1])]})
@@ -74,33 +76,12 @@ def get_action():
 def get_app_command():
     global pythonState
     json_string = urllib.parse.unquote(request.data.decode("UTF-8"))
-    problem = json.loads(json_string)
-
-    for key in problem.keys():
-        problem[key] = np.asarray(problem[key])
-
-    pg.correct_effector_data(problem)
-    state = sim.mergeState(
-        problem['Effectors'], problem['Targets'], problem['Opportunities'])
-
-    if type(pythonState) == np.ndarray:
-        compare_results(pythonState, state)
-
-    if MULTIPLE:
-        actions = get_actions_from_solver(copy.deepcopy(problem))
-        print(f"selected actions: {actions}")
-        assets = {'assets': []}
-        for action in actions:
-            assets['assets'].append([int(action[0]), int(action[1])])
-        resp = jsonify(assets)
-        return resp
-    else:
-        action = get_action_from_solver(copy.deepcopy(problem))
-        print(f"Selected action: {action}")
-        pythonState, _, _ = env.update_state(
-            (action[0], action[1]), state.copy())
-        resp = jsonify({'assets': [int(action[0]), int(action[1])]})
-        return resp
+    command = json.loads(json_string)
+    print(f"Instruction: {command['instruction'] }")
+    data = command['data']
+    tmpResponse = [[1,2],[3,4]]
+    
+    return jsonify(tmpResponse)
 
 
 app.run()
