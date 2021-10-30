@@ -27,14 +27,15 @@ for a_type in jf.AssetTypes:
 
 def correct_effector_data(problem):
     p = problem['Effectors']
-    print(f"{p = }")
-    if p.shape[1] == 12:
+    #if p.shape[1] == 12:
+    if len(p) == 12:
         extension = np.zeros((len(problem['Effectors']), len(jf.EffectorFeatures) - problem['Effectors'].shape[1]))
         problem['Effectors'] = np.append(problem['Effectors'], extension, axis=1)
 
 
 def truncate_effector_data(problem):
-    if problem['Effectors'].shape[1] == 18:
+    #if problem['Effectors'].shape[1] == 18:
+    if len(problem['Effectors']) == 18:
         problem['Effectors'] = problem['Effectors'][:, 0:12]
 
 
