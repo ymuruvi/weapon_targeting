@@ -14,6 +14,9 @@ from flask import Flask, request, jsonify
 app = Flask(__name__)
 pythonState = False
 env = sim.Simulation(sim.mergeState)
+appEnv = sim.Simulation(sim.mergeState)
+
+appProblem = None
 # Used to step through
 MULTIPLE = True
 
@@ -76,16 +79,18 @@ def get_action():
 @app.route('/app', methods=['POST', 'GET'])
 def get_app_command():
     global pythonState
+    global appProblem
     json_string = urllib.parse.unquote(request.data.decode("UTF-8"))
     command = json.loads(json_string)
     instruction = command['instruction']
     print(f"Instruction: {instruction = }")
     response = None
-    if(instruction == 'new'):
 
+    if(instruction == 'new'):
         data = command['data']
         print(f'{data = }')
         problem = pg.network_validation(data['effectors'], data['targets'])
+        appProblem = problem
         arena = problem['Arena'].tolist()
         effectors = problem['Effectors'].tolist()
         targets = problem['Targets'].tolist()
