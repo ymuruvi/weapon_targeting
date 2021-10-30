@@ -1,4 +1,7 @@
 # JointFireAutomation
+
+This is an adaption on the JFA program allowing for use with more devices.
+
 This code is related to the Joint Fire Automation problem.  It involves a simulator as well as other helper classes to facilitate the operation and testing
 
 Requirements: Python3, numpy, flask, and deap.
