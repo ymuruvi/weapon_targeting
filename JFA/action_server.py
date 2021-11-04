@@ -10,12 +10,14 @@ import json
 import urllib
 import copy
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
+CORS(app)
 pythonState = False
 env = sim.Simulation(sim.mergeState)
-appEnv = sim.Simulation(sim.mergeState)
 
+appEnv = None
 appProblem = None
 # Used to step through
 MULTIPLE = True
@@ -59,6 +61,8 @@ def get_action():
     pg.correct_effector_data(problem)
     state = sim.mergeState(
         problem['Effectors'], problem['Targets'], problem['Opportunities'])
+
+    return jsonify({'a':1,'b':2})
     if type(pythonState) == np.ndarray:
         compare_results(pythonState, state)
     if MULTIPLE:
@@ -78,31 +82,54 @@ def get_action():
 
 @app.route('/app', methods=['POST', 'GET'])
 def get_app_command():
-    global pythonState
     global appProblem
+    global appEnv
+    print(f"{request = }")
     json_string = urllib.parse.unquote(request.data.decode("UTF-8"))
     command = json.loads(json_string)
+    print(command)
+    #return jsonify("Response String")
     instruction = command['instruction']
     print(f"Instruction: {instruction = }")
     response = None
 
     if(instruction == 'new'):
-        data = command['data']
-        print(f'{data = }')
-        problem = pg.network_validation(data['effectors'], data['targets'])
-        appProblem = problem
+        #return jsonify("Return New")
+        data = command['args']
+        #print(f'{data = }')
+        appProblem = pg.network_validation(data['effectors'], data['targets'])
+        appEnv = sim.Simulation(sim.mergeState, problem=appProblem)
+        np_state = appEnv.getState()
+        list_state = np_state.tolist()
+        #print(f"{np_state = }")
+        j_list = json.dumps(list_state)
+        #print(f"{j_list = }")
+        """
+        print(f"({np_state.shape}) {np_state = }")
         arena = problem['Arena'].tolist()
         effectors = problem['Effectors'].tolist()
         targets = problem['Targets'].tolist()
         opps = problem['Opportunities'].tolist()
+        """
 
-        state = {'arena': arena, 'effectors': effectors, 'targets':targets,'opportunities':opps}
-        response = {'state': state, 'reward': None, 'time': 0}
-    
+        response = {'state': list_state, 'reward': None, 'time': 0}
+
+    elif(instruction == 'reset'):
+        print("Resetting Scenario with same problem")
+        state = appEnv.reset()
+        np_state = appEnv.getState()
+        list_state = np_state.tolist()
+
+        response = {'state': list_state, 'reward': None, 'time': 0}
+
     elif(instruction == 'step'):
-        action = command['action']
+        print("Stepping")
+        actions = command['actions']
+        env_data = appEnv.update
+        pass
 
     js_response = jsonify(response)
+    print(f"{js_response}")
     return js_response
 
 
