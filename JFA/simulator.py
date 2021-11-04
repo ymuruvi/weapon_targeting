@@ -102,6 +102,8 @@ def print_grid(state):
 
 
 class JeremyAgent:
+
+    # Returns a 
     @staticmethod
     def getAction(state):
         """
@@ -476,7 +478,8 @@ def main():
     while True:
         terminal = False
         while not terminal:
-            action = agent.getAction(state)
+            action = agent.getAction(state) #Returns a effector, task tuple
+            #print(f"{action = }")
             try:
                 new_state, reward, terminal = env.update(action)
                 total_reward += reward
