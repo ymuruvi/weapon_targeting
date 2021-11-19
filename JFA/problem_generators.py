@@ -433,3 +433,4 @@ def toy():
             opportunities[i][j][jf.OpportunityFeatures.PSUCCESS] = psuccess[i][j]
     problem = {'Arena': arena, 'Effectors': effectors, 'Targets': targets, 'Opportunities': opportunities}
     return problem
+

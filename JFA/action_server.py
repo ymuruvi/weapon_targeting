@@ -62,7 +62,7 @@ def get_action():
     state = sim.mergeState(
         problem['Effectors'], problem['Targets'], problem['Opportunities'])
 
-    return jsonify({'a':1,'b':2})
+    #return jsonify({'a':1,'b':2})
     if type(pythonState) == np.ndarray:
         compare_results(pythonState, state)
     if MULTIPLE:
@@ -94,23 +94,13 @@ def get_app_command():
     response = None
 
     if(instruction == 'new'):
-        #return jsonify("Return New")
         data = command['args']
-        #print(f'{data = }')
         appProblem = pg.network_validation(data['effectors'], data['targets'])
         appEnv = sim.Simulation(sim.mergeState, problem=appProblem)
         np_state = appEnv.getState()
         list_state = np_state.tolist()
-        #print(f"{np_state = }")
+        print(np_state.shape)
         j_list = json.dumps(list_state)
-        #print(f"{j_list = }")
-        """
-        print(f"({np_state.shape}) {np_state = }")
-        arena = problem['Arena'].tolist()
-        effectors = problem['Effectors'].tolist()
-        targets = problem['Targets'].tolist()
-        opps = problem['Opportunities'].tolist()
-        """
 
         response = {'state': list_state, 'reward': None, 'time': 0}
 
@@ -124,8 +114,11 @@ def get_app_command():
 
     elif(instruction == 'step'):
         print("Stepping")
-        actions = command['actions']
-        env_data = appEnv.update
+        print(f"CMD: {command}")
+        action_obj = command['action']
+        print(f"Doing Action: {action_obj}")
+        action = action_obj['effector'], action_obj['task']
+        #env_data = appEnv.update(action)
         pass
 
     js_response = jsonify(response)
