@@ -11,6 +11,7 @@ import urllib
 import copy
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+from simulator import print_grid
 
 app = Flask(__name__)
 CORS(app)
@@ -19,6 +20,7 @@ env = sim.Simulation(sim.mergeState)
 
 appEnv = None
 appProblem = None
+total_reward = 0
 # Used to step through
 MULTIPLE = True
 
@@ -94,17 +96,20 @@ def get_app_command():
     response = None
 
     if(instruction == 'new'):
+        total_reward = 0
         data = command['args']
         appProblem = pg.network_validation(data['effectors'], data['targets'])
         appEnv = sim.Simulation(sim.mergeState, problem=appProblem)
         np_state = appEnv.getState()
+        
         list_state = np_state.tolist()
         print(np_state.shape)
         j_list = json.dumps(list_state)
 
-        response = {'state': list_state, 'reward': None, 'time': 0}
+        response = {'state': list_state, 'reward': None, 'terminal':None, 'time': 0}
 
     elif(instruction == 'reset'):
+        total_reward = 0
         print("Resetting Scenario with same problem")
         state = appEnv.reset()
         np_state = appEnv.getState()
@@ -118,8 +123,17 @@ def get_app_command():
         action_obj = command['action']
         print(f"Doing Action: {action_obj}")
         action = action_obj['effector'], action_obj['task']
-        #env_data = appEnv.update(action)
-        pass
+        valid_action = True
+        reward = 0
+        terminal = False
+        valid_action = False
+        try:
+            new_state, reward, terminal = appEnv.update(action)
+        except:
+            new_state = appEnv.getState()
+        state_list = new_state.tolist()
+        
+        response = {'state': state_list,'valid': valid_action,  'reward': reward, 'terminal':terminal, 'time': 0}
 
     js_response = jsonify(response)
     print(f"{js_response}")
