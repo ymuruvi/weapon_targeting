@@ -126,4 +126,4 @@ def get_app_command():
     return js_response
 
 
-app.run()
+app.run(host="0.0.0.0")
