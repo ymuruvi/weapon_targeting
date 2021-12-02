@@ -17,3 +17,15 @@ Requirements: Python3, numpy, flask, and deap.
 `TrainSetGeneration` provides a wrapper to generate multiple problems with solutions from various solvers.
 
 `ActionServer` starts up a REST server to receive state information and provide an action, or actions based on the solver selected.
+
+### Dependencies
+
+Requires `numpy`, `sortedcontainers`, `flask`, `flask_cors`:
+
+`pip install numpy`
+
+`pip install sortedcontainers`
+
+`pip install flask`
+
+`pip install flask_cors`

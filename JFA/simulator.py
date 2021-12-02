@@ -216,6 +216,8 @@ class Simulation:
         return self.formatState(self.effectorData, self.taskData, self.opportunityData)
 
     def update(self, action):
+        print(f"{self.opportunityData}")
+        print(f"{jf.OpportunityFeatures.SELECTABLE=} {jf.OpportunityFeatures.PSUCCESS=}")
         """
         Take an action from an agent and apply that action to the effector specified.
         """
@@ -433,7 +435,9 @@ def mergeState(effectorData, taskData, opportunityData):
     effectors += effectorData
     tasks += taskData
     effectors = effectors.transpose([1, 0, 2])  # Transpose from m.n.p to n.m.p
-    return np.concatenate((effectors, tasks, opportunityData), axis=2).transpose((2, 0, 1))  # concatenate on the 3rd axis
+    merged_state = np.concatenate((effectors, tasks, opportunityData), axis=2).transpose((2, 0, 1))  # concatenate on the 3rd axis
+    print(f"{merged_state=}\n{opportunityData=}")
+    return merged_state
 
 
 def state_to_dict(effectorData, taskData, opportunityData):

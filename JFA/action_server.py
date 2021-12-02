@@ -26,6 +26,7 @@ MULTIPLE = True
 
 COMMANDS = {"step":1,"restart":2}
 
+
 def get_action_from_solver(state):
     _, solution = js.greedy(state)  # AStar(state)
     return solution[0]
@@ -121,18 +122,20 @@ def get_app_command():
         print("Stepping")
         print(f"CMD: {command}")
         action_obj = command['action']
-        print(f"Doing Action: {action_obj}")
+        print(f"Doing Action: {action_obj=}")
         action = action_obj['effector'], action_obj['task']
         valid_action = True
         reward = 0
         terminal = False
-        valid_action = False
+        valid_action = True
         try:
             new_state, reward, terminal = appEnv.update(action)
         except:
             new_state = appEnv.getState()
         state_list = new_state.tolist()
-        
+        #print(f"{new_state}")
+        #print_grid
+        print(f"{new_state.shape=}")
         response = {'state': state_list,'valid': valid_action,  'reward': reward, 'terminal':terminal, 'time': 0}
 
     js_response = jsonify(response)

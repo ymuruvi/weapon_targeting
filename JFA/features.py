@@ -1,6 +1,6 @@
 from enum import IntEnum, auto
 
-
+#5
 class ArenaFeatures(IntEnum):
 	COASTLINE = 0
 	FRONTLINE = auto()
@@ -8,7 +8,7 @@ class ArenaFeatures(IntEnum):
 	SCALE = auto()
 	TIMEHORIZON = auto()
 
-
+#18
 class EffectorFeatures(IntEnum):
 	XPOS = 0
 	YPOS = auto()
@@ -31,21 +31,21 @@ class EffectorFeatures(IntEnum):
 	ARMOURED = auto()
 	FRIGATE = auto()
 
-
+#4
 class TaskFeatures(IntEnum):
 	XPOS = 0
 	YPOS = auto()
 	VALUE = auto()
 	SELECTED = auto()
 
-
+#4
 class OpportunityFeatures(IntEnum):
 	PSUCCESS = 0
 	ENERGYCOST = auto()
 	TIMECOST = auto()
-	SELECTABLE = auto()
+	SELECTABLE = auto()#Possibly this
 
-
+#6
 class AssetTypes(IntEnum):
 	PLANE = 0
 	HELICOPTER = auto()
