@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from PGTest import printProblem
+from http.client import responses
 import simulator as sim
 import problem_generators as pg
 import features as jf
@@ -9,18 +9,38 @@ import numpy as np
 import json
 import urllib
 import copy
+import time
+import configparser
+
 from flask import Flask, request, jsonify
+from flask_cors import CORS
+from simulator import print_grid
+
+config = configparser.ConfigParser()
+config.read('config.ini')
+
+PORT = int(config['MCNANO']['port'])
+server_cert = config['MCNANO']['cert']
+server_key = config['MCNANO']['priv_key']
 
 app = Flask(__name__)
+CORS(app)
 pythonState = False
 env = sim.Simulation(sim.mergeState)
-appEnv = sim.Simulation(sim.mergeState)
 
-appProblem = None
-# Used to step through
+appEnv = None
+app_problem = None
+originalAppProblem = None
+total_reward = 0
+sequence_num = 0
+
+rewards = []
+
+
 MULTIPLE = True
 
-COMMANDS = {"step":1,"restart":2}
+COMMANDS = {"step": 1, "restart": 2}
+
 
 def get_action_from_solver(state):
     _, solution = js.greedy(state)  # AStar(state)
@@ -59,6 +79,8 @@ def get_action():
     pg.correct_effector_data(problem)
     state = sim.mergeState(
         problem['Effectors'], problem['Targets'], problem['Opportunities'])
+
+    # return jsonify({'a':1,'b':2})
     if type(pythonState) == np.ndarray:
         compare_results(pythonState, state)
     if MULTIPLE:
@@ -76,34 +98,87 @@ def get_action():
         return jsonify({'assets': [int(action[0]), int(action[1])]})
 
 
-@app.route('/app', methods=['POST', 'GET'])
+@app.route('/app', methods=['POST'])
 def get_app_command():
-    global pythonState
-    global appProblem
+    global app_problem
+    global appEnv
+    global sequence_num
+    global rewards
+    decodedData = request.data.decode("UTF-8")
+    #print(f"{request = }\n{decodedData = }")
     json_string = urllib.parse.unquote(request.data.decode("UTF-8"))
+    # print(json_string)
     command = json.loads(json_string)
+    print(command)
+    # return jsonify("Response String")
     instruction = command['instruction']
-    print(f"Instruction: {instruction = }")
+    #print(f"Instruction: {instruction = }")
     response = None
+    shape = [1]
 
     if(instruction == 'new'):
-        data = command['data']
-        print(f'{data = }')
-        problem = pg.network_validation(data['effectors'], data['targets'])
-        appProblem = problem
-        arena = problem['Arena'].tolist()
-        effectors = problem['Effectors'].tolist()
-        targets = problem['Targets'].tolist()
-        opps = problem['Opportunities'].tolist()
+        sequence_num = 0
+        data = command['args']
+        app_problem = pg.network_validation(data['effectors'], data['targets'])
 
-        state = {'arena': arena, 'effectors': effectors, 'targets':targets,'opportunities':opps}
-        response = {'state': state, 'reward': None, 'time': 0}
-    
+        appEnv = sim.Simulation(sim.mergeState, problem=app_problem)
+        np_state = appEnv.getState()
+
+        state_list = np_state.tolist()
+        state_shape = (list(np_state.shape))
+        state_shape.insert(0, 1)
+        #j_list = json.dumps(state_list)
+
+        response = {'state': state_list, 'reward': 0,
+                    'terminal': False, 'time': time.time(), 'shape': state_shape, 'valid': True}
+
+    elif(instruction == 'reset'):
+        sequence_num = 0
+        #state = appEnv.reset()
+        np_state = appEnv.getState()
+        state_list = np_state.tolist()
+        state_shape = (list(np_state.shape))
+        state_shape.insert(0, 1)
+        response = {'state': state_list, 'reward': 0, 'terminal': False,
+                    'time': time.time(), 'shape': state_shape, 'valid': True}
+
+        for r in rewards:
+            print(r)
+
     elif(instruction == 'step'):
-        action = command['action']
+        valid = True
+        sequence_num += 1
+        action_obj = command['action']
+        action = action_obj['effector'], action_obj['task']
+        reward = 0
+        terminal = False
+        try:
+            np_state, reward, terminal = appEnv.update(action)
+            if reward == 0:
+                terminal = True
+        except Exception as e:
+            np_state = appEnv.getState()
+            valid = False
+        state_list = np_state.tolist()
+        state_shape = (list(np_state.shape))
+        state_shape.insert(0, 1)
+        response = {'state': state_list,  'reward': reward,
+                    'terminal': terminal, 'time': 0, 'shape': state_shape, 'valid': valid}
+    elif(instruction == 'test'):
+        server_state = {'time': time.time(), 'status': 'working'}
+        response = {'server_state': server_state}
+
+    js_str = json.dumps(response)
+    with open('json_state.json', 'w') as outfile:
+        outfile.write(js_str)
+        #print("WRITING TO FILE")
 
     js_response = jsonify(response)
+
+    #print(f"({len(js_str)=}): {response}")
     return js_response
 
 
-app.run()
+if __name__ == "__main__":
+    app.run(host="0.0.0.0", port=PORT, ssl_context=(server_cert, server_key))
+
